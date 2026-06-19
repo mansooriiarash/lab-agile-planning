@@ -1,0 +1,27 @@
+<!doctype html><html lang="fa" dir="rtl"><head><meta charset="utf-8"><title>TOP Jira CSV Export Importer</title><style>body{font-family:sans-serif;margin:2rem;line-height:1.6}textarea{width:100%;height:18rem}pre{white-space:pre-wrap;background:#f6f6f6;padding:1rem}label{display:block;margin:.75rem 0}.warn{color:#9a6700}</style></head><body>
+<h1>TOP Jira CSV Export Importer</h1>
+<label>Import profile <select id="profile"><option>TOP Jira CSV Export</option></select></label>
+<label>Sprint name (required when Jira Sprint column is empty) <input id="sprint" placeholder="مثلاً Sprint 24" /></label>
+<label>Jira CSV file <input id="file" type="file" accept=".csv,text/csv" /></label>
+<button id="import">Validate import</button><button id="compare">Compare latest with previous</button><button id="md">Export Persian Markdown</button><button id="html">Export Persian HTML</button>
+<h2>Validation summary</h2><pre id="summary">No file imported yet.</pre>
+<h2>Data quality warnings</h2><pre id="warnings"></pre>
+<h2>Persian report</h2><textarea id="report"></textarea>
+<script type="module">
+import { importTopJiraCsv, compareSnapshots, generatePersianReport, markdownToHtml } from '../src/jiraTopImport.js';
+let snapshots = JSON.parse(localStorage.getItem('topJiraSnapshots')||'[]'), latest, comparison;
+const $=id=>document.getElementById(id);
+$('import').onclick = async()=>{
+  const f=$('file').files[0]; if(!f) return alert('CSV را انتخاب کنید');
+  latest = importTopJiraCsv(await f.text(), { sprintName:$('sprint').value, reportDate:new Date().toISOString() });
+  $('summary').textContent = JSON.stringify({profile:latest.profile,issues:latest.issues.length,columns:latest.headers.length,duplicateHeaders:latest.duplicateHeaders,analytics:latest.analytics}, null, 2);
+  const q=latest.analytics.dataQuality;
+  $('warnings').textContent = [`Missing story points: ${q.missingStoryPoints}`,`Missing stakeholder: ${q.missingStakeholder}`,`Missing due date: ${q.missingDueDate} (due date risk could not be fully calculated when missing)`,`Missing team: ${q.missingTeam}`,`Missing sprint in CSV: ${q.missingSprint}`].join('\n');
+  snapshots.push(latest); localStorage.setItem('topJiraSnapshots', JSON.stringify(snapshots));
+  $('report').value = generatePersianReport(latest);
+};
+$('compare').onclick=()=>{ if(snapshots.length<2) return alert('حداقل دو snapshot لازم است'); latest=snapshots.at(-1); comparison=compareSnapshots(snapshots.at(-2), latest); $('summary').textContent=JSON.stringify(comparison.analytics,null,2); $('report').value=generatePersianReport(latest, comparison); };
+function download(name,type,text){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([text],{type}));a.download=name;a.click();}
+$('md').onclick=()=>download('persian-jira-report.md','text/markdown;charset=utf-8',$('report').value);
+$('html').onclick=()=>download('persian-jira-report.html','text/html;charset=utf-8',markdownToHtml($('report').value));
+</script></body></html>
