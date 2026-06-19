@@ -1,0 +1,3 @@
+export const dynamic = 'force-dynamic';
+import { listSnapshots } from '@/lib/db-snapshots'; import { compareSnapshots } from '@/lib/compare/engine'; import { generatePersianReport } from '@/lib/reporting/persian-report';
+export default async function Report(){const snaps=await listSnapshots(); const md=snaps[0]&&snaps[1]?generatePersianReport(snaps[1],snaps[0],compareSnapshots(snaps[1],snaps[0])):'برای تولید گزارش حداقل دو اسنپ‌شات لازم است.'; return <div className="card"><h2 className="text-xl font-bold">Report Composer</h2><p className="muted">متن Markdown را می‌توانید کپی کنید. Export HTML از API /api/report پشتیبانی می‌شود.</p><pre className="mt-4 whitespace-pre-wrap rounded-xl bg-slate-100 p-4 text-sm">{md}</pre></div>}

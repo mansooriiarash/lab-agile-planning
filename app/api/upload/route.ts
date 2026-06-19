@@ -1,0 +1,2 @@
+import { NextResponse } from 'next/server'; import { applyMapping, parseWorkbook, validateMapping } from '@/lib/import/parser';
+export async function POST(req:Request){const fd=await req.formData(); const file=fd.get('file') as File; const mapping=JSON.parse(String(fd.get('mapping')||'{}')); const missing=validateMapping(mapping); if(missing.length) return NextResponse.json({error:'Missing required mapping',missing},{status:400}); const rows=parseWorkbook(await file.arrayBuffer()); return NextResponse.json({rows:rows.slice(0,10),items:applyMapping(rows,mapping)});}

@@ -1,0 +1,7 @@
+import * as XLSX from 'xlsx';
+import { SprintItemInput } from '@/lib/types';
+export const systemFields = ['issueKey','title','description','team','stakeholderDeputy','stakeholderUnit','businessArea','valueOwner','requestType','priority','storyPoints','status','previousStatusText','assignee','reporter','dueDate','labels','isBlocked','blockerReason','notes'] as const;
+export type Mapping = Partial<Record<typeof systemFields[number], string>>;
+export function parseWorkbook(buffer: ArrayBuffer){const wb=XLSX.read(buffer); const sheet=wb.Sheets[wb.SheetNames[0]]; return XLSX.utils.sheet_to_json<Record<string,unknown>>(sheet,{defval:''});}
+export function validateMapping(mapping: Mapping){const missing=[]; if(!mapping.title) missing.push('title'); if(!mapping.status) missing.push('status'); return missing;}
+export function applyMapping(rows:Record<string,unknown>[], mapping:Mapping): SprintItemInput[]{return rows.map(r=>{const get=(f:keyof Mapping)=> mapping[f] ? r[mapping[f]!] : undefined; return {issueKey:String(get('issueKey')||''), title:String(get('title')||'بدون عنوان'), description:String(get('description')||''), team:String(get('team')||'نامشخص'), stakeholderDeputy:String(get('stakeholderDeputy')||'نامشخص'), priority:String(get('priority')||''), storyPoints:Number(get('storyPoints')||0), status:String(get('status')||''), dueDate:String(get('dueDate')||''), isBlocked:['true','1','yes','بله'].includes(String(get('isBlocked')).toLowerCase()), blockerReason:String(get('blockerReason')||''), rawJson:r};});}

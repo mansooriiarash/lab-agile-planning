@@ -1,0 +1,23 @@
+import { Change, ComparisonResult, SnapshotInput, SprintItemInput } from '@/lib/types';
+import { inGroup, isBlockedStatus, normalizeKey } from './status';
+const val = (v: unknown) => v == null || v === '' ? undefined : String(v);
+const n = (v?: number) => Number(v || 0);
+function add(changes: Change[], item: SprintItemInput, changeType: Change['changeType'], fieldName: string | undefined, oldValue: unknown, newValue: unknown, severity: Change['severity'], analysisText: string) { changes.push({ issueKey: item.issueKey || normalizeKey(undefined,item.title,item.team), title: item.title, changeType, fieldName, oldValue: val(oldValue), newValue: val(newValue), severity, analysisText }); }
+export function compareSnapshots(base: SnapshotInput, current: SnapshotInput): ComparisonResult {
+ const baseMap = new Map(base.items.map(i=>[normalizeKey(i.issueKey,i.title,i.team), i])); const currentMap = new Map(current.items.map(i=>[normalizeKey(i.issueKey,i.title,i.team), i])); const changes: Change[]=[];
+ for (const [key, cur] of currentMap) { const old=baseMap.get(key); if(!old){ add(changes,cur,'ADDED','issue','-',cur.title,'MEDIUM','آیتم جدید به گزارش اضافه شده است.'); if(inGroup(cur.status,'current')) add(changes,cur,'SCOPE_INCREASE','status','-',cur.status,'MEDIUM','افزایش دامنه اجرا در اسپرینت مشاهده شد.'); continue; }
+  const fields: [keyof SprintItemInput, Change['changeType'], Change['severity'], string][] = [['status','STATUS_CHANGED','MEDIUM','وضعیت آیتم تغییر کرده است.'],['priority','PRIORITY_CHANGED','LOW','اولویت آیتم تغییر کرده است.'],['team','TEAM_CHANGED','MEDIUM','مالکیت تیمی آیتم تغییر کرده است.'],['stakeholderDeputy','STAKEHOLDER_CHANGED','MEDIUM','معاونت/ذی‌نفع آیتم تغییر کرده است.']];
+  for (const [f,t,s,txt] of fields) if(val(old[f])!==val(cur[f])) add(changes,cur,t,String(f),old[f],cur[f],s,txt);
+  if(n(old.storyPoints)!==n(cur.storyPoints)){ const inc=n(cur.storyPoints)>n(old.storyPoints); add(changes,cur,inc?'SCOPE_INCREASE':'SCOPE_DECREASE','storyPoints',old.storyPoints,cur.storyPoints,inc?'MEDIUM':'LOW',inc?'Story Point افزایش یافته و نشانه رشد برآورد/دامنه است.':'Story Point کاهش یافته است.'); add(changes,cur,'STORY_POINTS_CHANGED','storyPoints',old.storyPoints,cur.storyPoints,inc?'MEDIUM':'LOW','برآورد Story Point تغییر کرده است.'); }
+  if(val(old.dueDate)!==val(cur.dueDate)) add(changes,cur,'DUE_DATE_CHANGED','dueDate',old.dueDate,cur.dueDate,'MEDIUM','تاریخ سررسید تغییر کرده است.');
+  if(Boolean(old.isBlocked || isBlockedStatus(old.status))!==Boolean(cur.isBlocked || isBlockedStatus(cur.status))) add(changes,cur,'BLOCKER_CHANGED','isBlocked',old.isBlocked,cur.isBlocked,'HIGH','وضعیت مانع/توقف تغییر کرده است.');
+  if(!inGroup(old.status,'current') && inGroup(cur.status,'current')) add(changes,cur,'MOVED_TO_CURRENT_SPRINT','status',old.status,cur.status,'MEDIUM','آیتم به دامنه اجرای Current Sprint وارد شده است.');
+  if(inGroup(old.status,'current') && inGroup(cur.status,'remain')) { add(changes,cur,'MOVED_TO_REMAIN','status',old.status,cur.status,'HIGH','آیتم از Current Sprint به Remain منتقل شده و ریسک تحویل دارد.'); add(changes,cur,'CARRY_OVER','status',old.status,cur.status,'HIGH','Carry-over احتمالی برای جلسه برنامه‌ریزی باید بررسی شود.'); }
+  if(!inGroup(old.status,'stopped') && inGroup(cur.status,'stopped')) add(changes,cur,'MOVED_TO_STOPPED','status',old.status,cur.status,'HIGH','آیتم متوقف/دارای مانع شده و نیازمند توجه مدیریتی است.');
+  if(!inGroup(old.status,'uatReview') && inGroup(cur.status,'uatReview')) add(changes,cur,'MOVED_TO_UAT_OR_REVIEW','status',old.status,cur.status,'LOW','پیشرفت به مرحله UAT/Review ثبت شده است.');
+  if(!inGroup(old.status,'doneReleased') && inGroup(cur.status,'doneReleased')) add(changes,cur,'MOVED_TO_DONE_OR_RELEASED','status',old.status,cur.status,'LOW','حرکت تحویلی به Done/Released ثبت شده است.');
+ }
+ for (const [key, old] of baseMap) if(!currentMap.has(key)) add(changes,old,'REMOVED','issue',old.title,'-','MEDIUM','آیتم از گزارش جدید حذف یا خارج شده است.');
+ const totalBaseSP=base.items.reduce((s,i)=>s+n(i.storyPoints),0), totalCurrentSP=current.items.reduce((s,i)=>s+n(i.storyPoints),0); const added=changes.filter(c=>c.changeType==='ADDED').length;
+ return { baseSnapshotId: base.id, currentSnapshotId: current.id, summary: { totalBaseIssues: base.items.length,totalCurrentIssues: current.items.length,totalBaseSP,totalCurrentSP,storyPointDelta:totalCurrentSP-totalBaseSP,addedIssueCount:added,removedIssueCount:changes.filter(c=>c.changeType==='REMOVED').length,statusChangedCount:changes.filter(c=>c.changeType==='STATUS_CHANGED').length,sprintChurnPercentage: current.items.length ? Math.round(((added+changes.filter(c=>c.changeType==='REMOVED').length)/current.items.length)*100) : 0 }, changes };
+}

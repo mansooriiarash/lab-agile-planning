@@ -1,0 +1,3 @@
+export const dynamic = 'force-dynamic';
+import { listSnapshots } from '@/lib/db-snapshots';
+export default async function Snapshots(){const snaps=await listSnapshots(); return <div className="card"><h2 className="text-xl font-bold">Sprint Snapshots</h2><table className="mt-4 w-full text-sm"><thead><tr><th>نام</th><th>اسپرینت</th><th>تاریخ</th><th>فایل</th><th>آیتم</th><th>SP</th></tr></thead><tbody>{snaps.map(s=><tr className="border-t" key={s.id}><td>{s.name}</td><td>{s.sprintName}</td><td>{new Date(s.reportDate).toLocaleDateString('fa-IR')}</td><td>{s.sourceFileName}</td><td>{s.items.length}</td><td>{s.items.reduce((a,i)=>a+Number(i.storyPoints||0),0)}</td></tr>)}</tbody></table>{!snaps.length&&<p className="muted mt-4">داده‌ای موجود نیست.</p>}</div>}

@@ -1,0 +1,4 @@
+import './globals.css'; import Link from 'next/link';
+export const metadata={title:'Sprint Planning Report Analyzer',description:'Persian RTL sprint analytics'};
+const nav=[['/','داشبورد'],['/upload','بارگذاری گزارش'],['/snapshots','اسنپ‌شات‌ها'],['/compare','مقایسه'],['/analytics','تحلیل‌ها'],['/report','گزارش مدیریتی']];
+export default function RootLayout({children}:{children:React.ReactNode}){return <html lang="fa" dir="rtl"><body className="font-sans"><div className="mx-auto max-w-7xl p-6"><header className="mb-6 flex flex-wrap items-center justify-between gap-3"><h1 className="text-2xl font-bold">تحلیل‌گر گزارش Sprint Planning</h1><nav className="flex flex-wrap gap-2">{nav.map(([h,t])=><Link className="rounded-xl bg-white px-3 py-2 text-sm shadow-sm" href={h} key={h}>{t}</Link>)}</nav></header>{children}</div></body></html>}

@@ -1,0 +1,6 @@
+Issue Key,Title,Team,Stakeholder Deputy,Priority,Story Points,Status,Is Blocked,Blocker Reason
+PAY-101,IPG refund reconciliation,IPG,پشتیبانی و عملیات,High,8,Current Sprint,false,
+PAY-102,POS settlement fix,POS,فناوری اطلاعات,Medium,5,Ready for Development,false,
+PAY-103,Switch timeout monitoring,Switch,نظارت / ریسک / امنیت,High,13,Current Sprint,false,
+PAY-104,Back Office role audit,Tapyar / Back Office,برنامه‌ریزی و بهبود سازمانی,Low,3,Next Sprint,false,
+PAY-105,BPMS approval workflow,BPMS,توسعه بازار,Medium,8,Approved,false,

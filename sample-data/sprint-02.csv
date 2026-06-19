@@ -1,0 +1,7 @@
+Issue Key,Title,Team,Stakeholder Deputy,Priority,Story Points,Status,Is Blocked,Blocker Reason
+PAY-101,IPG refund reconciliation,IPG,پشتیبانی و عملیات,High,13,Remain,false,
+PAY-102,POS settlement fix,POS,فناوری اطلاعات,High,5,Current Sprint,false,
+PAY-103,Switch timeout monitoring,Switch,نظارت / ریسک / امنیت,High,13,Review,false,
+PAY-104,Back Office role audit,Tapyar / Back Office,برنامه‌ریزی و بهبود سازمانی,Low,3,Stopped / Blocked,true,Security decision pending
+PAY-106,Infrastructure CI capacity,Software Infrastructure,فناوری اطلاعات,Medium,8,Current Sprint,false,
+PAY-107,Fraud rule dashboard,Switch,نظارت / ریسک / امنیت,High,5,Current Sprint,false,
